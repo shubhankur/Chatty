@@ -6,7 +6,7 @@
 void printAuthor(char *ubit)
 {
     cse4589_print_and_log("[AUTHOR:SUCCESS]\n");
-    cse4589_print_and_log(("I, %s, have read and understood the course academic integrity policy.\n", ubit));
+    cse4589_print_and_log("I, %s, have read and understood the course academic integrity policy.\n", ubit);
     cse4589_print_and_log("[AUTHOR:END]\n");
 }
 
