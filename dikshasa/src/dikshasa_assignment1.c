@@ -397,6 +397,22 @@ void host__execute_command(char command[], int requesting_client_fd) {
     }
     fflush(stdout);
 }
+void displayLoggedInClients() {
+    cse4589_print_and_log("[LIST:SUCCESS]\n");
+
+    struct host * temp = clients;
+    int id = 1;
+    while (temp != NULL) {
+        // SUSPICIOUS FOR REFRESH
+        if (temp -> is_logged_in) {
+            cse4589_print_and_log("%-5d%-35s%-20s%-8s\n", id, temp -> hostname, temp -> ip_addr, (temp -> port_num));
+            id = id + 1;
+        }
+        temp = temp -> next_host;
+    }
+
+    cse4589_print_and_log("[LIST:END]\n");
+}
 
 /***  EXECUTE SERVER COMMANDS ***/
 void server__execute_command(char command[], int requesting_client_fd) {
@@ -454,23 +470,6 @@ void server__execute_command(char command[], int requesting_client_fd) {
         server__handle_exit(requesting_client_fd);
     }
     fflush(stdout);
-}
-
-void displayLoggedInClients() {
-    cse4589_print_and_log("[LIST:SUCCESS]\n");
-
-    struct host * temp = clients;
-    int id = 1;
-    while (temp != NULL) {
-        // SUSPICIOUS FOR REFRESH
-        if (temp -> is_logged_in) {
-            cse4589_print_and_log("%-5d%-35s%-20s%-8s\n", id, temp -> hostname, temp -> ip_addr, (temp -> port_num));
-            id = id + 1;
-        }
-        temp = temp -> next_host;
-    }
-
-    cse4589_print_and_log("[LIST:END]\n");
 }
 
 /***  EXECUTE CLIENT COMMANDS ***/
