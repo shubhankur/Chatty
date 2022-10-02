@@ -22,32 +22,19 @@
  */
 
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <unistd.h>
-
 #include <sys/types.h>
-
 #include <sys/socket.h>
-
 #include <sys/stat.h>
-
 #include <netinet/in.h>
-
 #include <arpa/inet.h>
-
 #include <netdb.h>
-
 #include <stdbool.h>
-
+#include "../include/universalMethods.h"
 #include "../include/global.h"
-
 #include "../include/logger.h"
-
-// INITIALISE DEFINITIONS AND STRUCTURES
 
 #define min(a, b)(((a) < (b)) ? (a) : (b))
 #define MAXDATASIZE 500
@@ -104,18 +91,6 @@ void execute_command(char command[], int requesting_client_fd);
 void host__execute_command(char command[], int requesting_client_fd);
 void server__execute_command(char command[], int requesting_client_fd);
 void client__execute_command(char command[]);
-
-// AUTHOR
-void host__print_author();
-
-// IP
-void host__print_ip_address();
-
-// PORT
-void host__print_port();
-
-// _LIST
-void host__print_list_of_clients();
 
 // LOGIN
 int client__connect_server(char server_ip[], char server_port[]);
@@ -414,11 +389,11 @@ void execute_command(char command[], int requesting_client_fd) {
 /***  EXECUTE HOST COMMANDS (COMMAND SHELL COMMANDS) ***/
 void host__execute_command(char command[], int requesting_client_fd) {
     if (strstr(command, "AUTHOR") != NULL) {
-        host__print_author();
+        printAuthor("dikshasa");
     } else if (strstr(command, "IP") != NULL) {
-        host__print_ip_address();
+        displayIp(localhost -> ip_addr);
     } else if (strstr(command, "PORT") != NULL) {
-        host__print_port();
+        displayPort(localhost -> port_num); 
     }
     fflush(stdout);
 }
@@ -426,7 +401,7 @@ void host__execute_command(char command[], int requesting_client_fd) {
 /***  EXECUTE SERVER COMMANDS ***/
 void server__execute_command(char command[], int requesting_client_fd) {
     if (strstr(command, "LIST") != NULL) {
-        host__print_list_of_clients();
+        displayLoggedInClients(clients);
     } else if (strstr(command, "STATISTICS") != NULL) {
         server__print_statistics();
     } else if (strstr(command, "BLOCKED") != NULL) {
@@ -481,11 +456,28 @@ void server__execute_command(char command[], int requesting_client_fd) {
     fflush(stdout);
 }
 
+void displayLoggedInClients() {
+    cse4589_print_and_log("[LIST:SUCCESS]\n");
+
+    struct host * temp = clients;
+    int id = 1;
+    while (temp != NULL) {
+        // SUSPICIOUS FOR REFRESH
+        if (temp -> is_logged_in) {
+            cse4589_print_and_log("%-5d%-35s%-20s%-8s\n", id, temp -> hostname, temp -> ip_addr, (temp -> port_num));
+            id = id + 1;
+        }
+        temp = temp -> next_host;
+    }
+
+    cse4589_print_and_log("[LIST:END]\n");
+}
+
 /***  EXECUTE CLIENT COMMANDS ***/
 void client__execute_command(char command[]) {
     if (strstr(command, "LIST") != NULL) {
         if (localhost -> is_logged_in) {
-            host__print_list_of_clients();
+            displayLoggedInClients();
         } else {
             cse4589_print_and_log("[LIST:ERROR]\n");
             cse4589_print_and_log("[LIST:END]\n");
@@ -618,45 +610,6 @@ void client__execute_command(char command[]) {
         client_exit();
     }
     fflush(stdout);
-}
-
-/***  PRINT AUTHOR ***/
-void host__print_author() {
-    cse4589_print_and_log("[AUTHOR:SUCCESS]\n");
-    cse4589_print_and_log("I, rupampat, have read and understood the course academic integrity policy.\n");
-    cse4589_print_and_log("[AUTHOR:END]\n");
-}
-
-/***  PRINT IP ***/
-void host__print_ip_address() {
-    cse4589_print_and_log("[IP:SUCCESS]\n");
-    cse4589_print_and_log("IP:%s\n", localhost -> ip_addr);
-    cse4589_print_and_log("[IP:END]\n");
-}
-
-/***  PRINT PORT ***/
-void host__print_port() {
-    cse4589_print_and_log("[PORT:SUCCESS]\n");
-    cse4589_print_and_log("PORT:%s\n", localhost -> port_num);
-    cse4589_print_and_log("[PORT:END]\n");
-}
-
-/***  PRINT LIST OF CLIENTS (_LIST COMMAND) ***/
-void host__print_list_of_clients() {
-    cse4589_print_and_log("[LIST:SUCCESS]\n");
-
-    struct host * temp = clients;
-    int id = 1;
-    while (temp != NULL) {
-        // SUSPICIOUS FOR REFRESH
-        if (temp -> is_logged_in) {
-            cse4589_print_and_log("%-5d%-35s%-20s%-8s\n", id, temp -> hostname, temp -> ip_addr, (temp -> port_num));
-            id = id + 1;
-        }
-        temp = temp -> next_host;
-    }
-
-    cse4589_print_and_log("[LIST:END]\n");
 }
 
 /***  PRINT STATISTICS ***/
