@@ -52,7 +52,6 @@ int client__register_listener(struct host *myhost) {
 }
 
 void client__init(struct host *myhost) {
-    // TODO: modularise
     client__register_listener(myhost);
     while (1) {
         // handle data from standard input
