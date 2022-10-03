@@ -20,9 +20,9 @@
 
 #include <stdbool.h>
 
-#include "./include/global.h"
-#include "./include/logger.h"
-#include "./include/universalMethods.h"
+#include "../include/global.h"
+#include "../include/logger.h"
+#include "../include/universalMethods.h"
 
 // INITIALISE DEFINITIONS AND STRUCTURES
 
