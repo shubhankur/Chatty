@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../include/executecommand.h"
-#include "../include/client.h"
 #include "../include/host.h"
 #include <string.h>
 

@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <string.h>
 #include "../include/startup.h"
-#include "../include/client.h"
 #include "../include/server.h"
 #include "../include/host.h"
 
