@@ -47,8 +47,8 @@ void inialize(bool is_server, char * port) {
     myhost -> is_server = is_server;
     setHostNameAndIp(myhost);
     if (is_server) {
-        initializeServer();
+        initializeServer(myhost);
     } else {
-        initializeClient();
+        initializeClient(myhost);
     }
 }
