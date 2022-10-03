@@ -1,0 +1,1 @@
+void client__init(struct host *localhost);

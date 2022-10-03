@@ -2,6 +2,25 @@
     "files.associations": {
         "in.h": "c",
         "__config": "c",
-        "global.h": "c"
+        "global.h": "c",
+        "__availability": "c",
+        "algorithm": "c",
+        "complex": "c",
+        "__bit_reference": "c",
+        "__hash_table": "c",
+        "__mutex_base": "c",
+        "__string": "c",
+        "__undef_macros": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "cmath": "c",
+        "istream": "c",
+        "limits": "c",
+        "locale": "c",
+        "ratio": "c",
+        "streambuf": "c",
+        "string": "c",
+        "string_view": "c",
+        "vector": "c"
     }
 }

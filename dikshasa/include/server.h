@@ -1,0 +1,1 @@
+void server__init(struct host *myhost);
