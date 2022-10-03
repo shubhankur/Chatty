@@ -41,6 +41,7 @@ int main(int argc, char ** argv) {
 
     /*Start Here*/
     // initialise the host
-    host__init(argv[1], argv[2]);
+    //host__init(argv[1], argv[2]);
+    host__init(strcmp(argv[1], "s") == 0, argv[2]);
     return 0;
 }
