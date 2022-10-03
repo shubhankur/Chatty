@@ -22,47 +22,30 @@
 
 #include "../include/global.h"
 #include "../include/logger.h"
+#include "../include/host.h"
 #include "../include/universalMethods.h"
 
 #define dataSizeMax 500
 #define dataSizeMaxBg 500 * 200
 #define STDIN 0
 
+//To handle messages
 struct message {
     char text[dataSizeMaxBg];
     struct host * from_client;
     struct message * next_message;
-    bool is_broadcast;
 };
-
-struct host {
-    char hostname[dataSizeMax];
-    char ip[dataSizeMax];
-    char port[dataSizeMax];
-    char status[dataSizeMax];
-    int fd;
-    struct host * next_host;
-    bool is_logged_in;
-    bool is_server;
-};
-
-// INITIALISE GLOBAL VARIABLES
-struct host * new_client = NULL;
-struct host * clients = NULL;
-struct host * localhost = NULL;
-struct host * server = NULL; // this is used only by the clients to store server info
-int yes = 1; // this is used for setsockopt
-
-// HELPER FUNCTIONS
-void * getInAddress(struct sockaddr * sa);
-bool isIpValid(char ip[dataSizeMax]);
-void setHostNameAndIp(struct host * h);
-void sendCommand(int fd, char msg[]);
+struct host * myhost = NULL;
+//to handle hosts
+struct host * new_client = NULL; //handle new clients
+struct host * clientList = NULL; //contains clients 
+struct host * server = NULL; // store server details
+int yes = 1; // used to set socket option
 
 // APPLICATION STARTUP
 void inialize(bool is_server, char * port);
-void initializeServer();
-void initializeClient();
+void initializeServer(struct host * h);
+void initializeClient(struct host * h);
 int registerClientLIstener();
 
 // COMMAND EXECUTION
@@ -87,78 +70,9 @@ void serverHandleRefresh(int requesting_client_fd);
 void exitServer(int requesting_client_fd);
 void exitClient();
 
-/*** GET IP4 OR IP6 ADDRESS***/
-void * getInAddress(struct sockaddr * sa) {
-    if (sa -> sa_family == AF_INET) {
-        return &(((struct sockaddr_in * ) sa) -> sin_addr);
-    }
-    return &(((struct sockaddr_in6 * ) sa) -> sin6_addr);
-}
-
-/*** CHECK VALID IP4 ADDRESS***/
-bool isIpValid(char ip[dataSizeMax]) {
-    struct sockaddr_in sa;
-    int result = inet_pton(AF_INET, ip, & (sa.sin_addr));
-    return result != 0;
-}
-
-/***  GET HOSTNAME AND IP4 ADDRESS OF LOCAL SYSTEM 
-      NOTE: The following function has been inspired from
-      https://www.geeksforgeeks.org/c-program-display-hostname-ip-address/
-***/
-void setHostNameAndIp(struct host * h) {
-    char myIP[16];
-    unsigned int myPort;
-    struct sockaddr_in server_addr, my_addr;
-    int sockfd;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    struct hostent *he;
-
-    // Set server_addr of Google DNS
-    bzero(&server_addr, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr("8.8.8.8");
-    server_addr.sin_port = htons(53);
-
-    // Connect to server
-    connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-
-    // Get my ip address and port
-    bzero(&my_addr, sizeof(my_addr));
-    socklen_t len = sizeof(my_addr);
-    getsockname(sockfd, (struct sockaddr *)&my_addr, &len);
-    inet_ntop(AF_INET, &my_addr.sin_addr, myIP, sizeof(myIP));
-    he = gethostbyaddr(&my_addr.sin_addr, sizeof(my_addr.sin_addr), AF_INET);
-
-    // Storing my IP and Address in myHost
-    memcpy(h->ip, myIP, sizeof(h->ip));
-    memcpy(h->hostname, he->h_name, sizeof(h->hostname));
-    return;
-}
-
-/***  HOST INITIALISATION ***/
-void inialize(bool is_server, char * port) {
-    localhost = malloc(sizeof(struct host));
-    memcpy(localhost -> port, port, sizeof(localhost -> port));
-    localhost -> is_server = is_server;
-    setHostNameAndIp(localhost);
-    if (is_server) {
-        initializeServer();
-    } else {
-        initializeClient();
-    }
-}
-
-/** SEND A MESSAGE TO FROM LOCALHOST TO REMOTEHOST (CAN BE BACKGROUND MSG OR COMMAND) **/
-void sendCommand(int fd, char msg[]) {
-    int rv;
-    if (rv = send(fd, msg, strlen(msg) + 1, 0) == -1) {
-        // printf("ERROR")
-    }
-}
-
 /***  SERVER INITIALISATION ***/
-void initializeServer() {
+void initializeServer(struct host * h) {
+    myhost = h;
     int listener = 0, status;
     struct addrinfo hints, * localhost_ai, * temp_ai;
 
@@ -167,7 +81,7 @@ void initializeServer() {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
-    if (status = getaddrinfo(NULL, localhost -> port, & hints, & localhost_ai) != 0) {
+    if (status = getaddrinfo(NULL, myhost -> port, & hints, & localhost_ai) != 0) {
         exit(EXIT_FAILURE);
     }
 
@@ -196,7 +110,7 @@ void initializeServer() {
     }
 
     // assign listener to localhost fd
-    localhost -> fd = listener;
+    myhost -> fd = listener;
 
     freeaddrinfo(localhost_ai);
 
@@ -241,13 +155,25 @@ void initializeServer() {
                         if (new_client_fd > fdmax) { // keep track of the max
                             fdmax = new_client_fd;
                         }
-                        memcpy(new_client -> ip,
+                        struct sockaddr * sa = (struct sockaddr * ) & new_client_addr;
+                        if (sa -> sa_family == AF_INET) {
+                            memcpy(new_client -> ip,
                             inet_ntop(
                                 new_client_addr.ss_family,
-                                getInAddress((struct sockaddr * ) & new_client_addr), // even though new_client_addr is of type sockaddr_storage, they can be cast into each other. Refer beej docs.
+                                &(((struct sockaddr_in * ) sa) -> sin_addr), // even though new_client_addr is of type sockaddr_storage, they can be cast into each other. Refer beej docs.
                                 newClientIP,
                                 INET6_ADDRSTRLEN
                             ), sizeof(new_client -> ip));
+                        }
+                        else{
+                            memcpy(new_client -> ip,
+                            inet_ntop(
+                                new_client_addr.ss_family,
+                                &(((struct sockaddr_in6 * ) sa) -> sin6_addr), // even though new_client_addr is of type sockaddr_storage, they can be cast into each other. Refer beej docs.
+                                newClientIP,
+                                INET6_ADDRSTRLEN
+                            ), sizeof(new_client -> ip));
+                        }
                         new_client -> fd = new_client_fd;
                         new_client -> is_logged_in = true;
                         new_client -> next_host = NULL;
@@ -282,9 +208,8 @@ void initializeServer() {
     return;
 }
 
-/***  CLIENT INITIALISATION ***/
-void initializeClient() {
-    // TODO: modularise
+void initializeClient(struct host * h) {
+    myhost = h;
     registerClientLIstener();
     while (true) {
         // handle data from standard input
@@ -307,7 +232,7 @@ int registerClientLIstener() {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    if (status = getaddrinfo(NULL, localhost -> port, & hints, & localhost_ai) != 0) {
+    if (status = getaddrinfo(NULL, myhost -> port, & hints, & localhost_ai) != 0) {
         exit(EXIT_FAILURE);
     }
 
@@ -335,7 +260,7 @@ int registerClientLIstener() {
         exit(EXIT_FAILURE);
     }
 
-    localhost -> fd = listener;
+    myhost -> fd = listener;
 
     freeaddrinfo(localhost_ai);
 }
@@ -343,7 +268,7 @@ int registerClientLIstener() {
 /***  EXECUTE COMMANDS ***/
 void exCommand(char command[], int requesting_client_fd) {
     exCommandHost(command, requesting_client_fd);
-    if (localhost -> is_server) {
+    if (myhost -> is_server) {
         exCommandServer(command, requesting_client_fd);
     } else {
         exCommandClient(command);
@@ -356,9 +281,9 @@ void exCommandHost(char command[], int requesting_client_fd) {
     if (strstr(command, "AUTHOR") != NULL) {
         printAuthor("skumar45");
     } else if (strstr(command, "IP") != NULL) {
-        displayIp(localhost->ip);
+        displayIp(myhost->ip);
     } else if (strstr(command, "PORT") != NULL) {
-        displayPort(localhost -> port);
+        displayPort(myhost -> port);
     }
     fflush(stdout);
 }
@@ -382,7 +307,7 @@ void exCommandServer(char command[], int requesting_client_fd) {
 /***  EXECUTE CLIENT COMMANDS ***/
 void exCommandClient(char command[]) {
     if (strstr(command, "LIST") != NULL) {
-        if (localhost -> is_logged_in) {
+        if (myhost -> is_logged_in) {
             printLoggedInClients();
         } else {
             cse4589_print_and_log("[LIST:ERROR]\n");
@@ -417,7 +342,7 @@ void exCommandClient(char command[]) {
     } else if (strstr(command, "REFRESHRESPONSE") != NULL) {
         clientRefreshClientList(command);
     } else if (strstr(command, "REFRESH") != NULL) {
-        if (localhost -> is_logged_in) {
+        if (myhost -> is_logged_in) {
             sendCommand(server -> fd, "REFRESH\n");
         } else {
             cse4589_print_and_log("[REFRESH:ERROR]\n");
@@ -433,7 +358,7 @@ void exCommandClient(char command[]) {
 void printLoggedInClients() {
     cse4589_print_and_log("[LIST:SUCCESS]\n");
 
-    struct host * temp = clients;
+    struct host * temp = clientList;
     int id = 1;
     while (temp != NULL) {
         // SUSPICIOUS FOR REFRESH
@@ -490,7 +415,7 @@ int connectClientServer(char server_ip[], char server_port[]) {
     // Initalisze a listener as well to listen for P2P cibbectuibs
     int listener = 0;
     struct addrinfo * localhost_ai;
-    if (status = getaddrinfo(NULL, localhost -> port, & hints, & localhost_ai) != 0) {
+    if (status = getaddrinfo(NULL, myhost -> port, & hints, & localhost_ai) != 0) {
         return 0;
     }
 
@@ -519,7 +444,7 @@ int connectClientServer(char server_ip[], char server_port[]) {
         return 0;
     }
 
-    localhost -> fd = listener;
+    myhost -> fd = listener;
 
     freeaddrinfo(localhost_ai);
 
@@ -537,7 +462,9 @@ void loginClient(char server_ip[], char server_port[]) {
         return;
     }
     if (server == NULL) {
-        if (!isIpValid(server_ip) || connectClientServer(server_ip, server_port) == 0) {
+        struct sockaddr_in sa;
+        bool ipValid = inet_pton(AF_INET, server_ip, & (sa.sin_addr))==0;
+        if (!ipValid || connectClientServer(server_ip, server_port) == 0) {
             cse4589_print_and_log("[LOGIN:ERROR]\n");
             cse4589_print_and_log("[LOGIN:END]\n");
             return;
@@ -554,10 +481,10 @@ void loginClient(char server_ip[], char server_port[]) {
     // we need to make sure everything reflects this
 
     // The client will send a login message to server with it's details here
-    localhost -> is_logged_in = true;
+    myhost -> is_logged_in = true;
 
     char msg[dataSizeMax * 4];
-    sprintf(msg, "LOGIN %s %s %s\n", localhost -> ip, localhost -> port, localhost -> hostname);
+    sprintf(msg, "LOGIN %s %s %s\n", myhost -> ip, myhost -> port, myhost -> hostname);
     sendCommand(server -> fd, msg);
 
     // Now we have a server_fd. We add it to he master list of fds along with stdin.
@@ -567,9 +494,9 @@ void loginClient(char server_ip[], char server_port[]) {
     FD_ZERO( & read_fds);
     FD_SET(server -> fd, & master); // Add server->fd to the master list
     FD_SET(STDIN, & master); // Add STDIN to the master list
-    FD_SET(localhost -> fd, & master);
+    FD_SET(myhost -> fd, & master);
     int fdmax = server -> fd > STDIN ? server -> fd : STDIN; // maximum file descriptor number. initialised to listener    
-    fdmax = fdmax > localhost -> fd ? fdmax : localhost -> fd;
+    fdmax = fdmax > myhost -> fd ? fdmax : myhost -> fd;
     // variable initialisations
     char data_buffer[dataSizeMaxBg]; // buffer for client data
     int data_buffer_bytes; // holds number of bytes received and stored in data_buffer
@@ -578,7 +505,7 @@ void loginClient(char server_ip[], char server_port[]) {
     socklen_t addrlen = sizeof new_peer_addr;
 
     // main loop
-    while (localhost -> is_logged_in) {
+    while (myhost -> is_logged_in) {
         read_fds = master; // make a copy of master set
         if (select(fdmax + 1, & read_fds, NULL, NULL, NULL) == -1) {
             exit(EXIT_FAILURE);
@@ -608,7 +535,7 @@ void loginClient(char server_ip[], char server_port[]) {
                     if (fgets(command, dataSizeMaxBg - 1, stdin) != NULL) {
                         exCommand(command, STDIN);
                     }
-                } else if (fd == localhost -> fd) {
+                } else if (fd == myhost -> fd) {
 
                     int new_peer_fd = accept(fd, (struct sockaddr * ) & new_peer_addr, & addrlen);
                 }
@@ -625,7 +552,7 @@ void loginClient(char server_ip[], char server_port[]) {
 /** HANDLE LOGIN ON SERVER SIDE (REGISTER THE CLIENT AND SEND LIST OF CLIENTS BACK TO IT) **/
 void loginHandleServer(char client_ip[], char client_port[], char client_hostname[], int requesting_client_fd) {
     char client_return_msg[dataSizeMaxBg] = "REFRESHRESPONSE FIRST\n";
-    struct host * temp = clients;
+    struct host * temp = clientList;
     bool is_new = true;
     struct host * requesting_client = malloc(sizeof(struct host));
 
@@ -643,14 +570,14 @@ void loginHandleServer(char client_ip[], char client_port[], char client_hostnam
         memcpy(new_client -> port, client_port, sizeof(new_client -> port));
         requesting_client = new_client;
         int client_port_value = atoi(client_port);
-        if (clients == NULL) {
-            clients = malloc(sizeof(struct host));
-            clients = new_client;
-        } else if (client_port_value < atoi(clients -> port)) {
-            new_client -> next_host = clients;
-            clients = new_client;
+        if (clientList == NULL) {
+            clientList = malloc(sizeof(struct host));
+            clientList = new_client;
+        } else if (client_port_value < atoi(clientList -> port)) {
+            new_client -> next_host = clientList;
+            clientList = new_client;
         } else {
-            struct host * temp = clients;
+            struct host * temp = clientList;
             while (temp -> next_host != NULL && atoi(temp -> next_host -> port) < client_port_value) {
                 temp = temp -> next_host;
             }
@@ -662,7 +589,7 @@ void loginHandleServer(char client_ip[], char client_port[], char client_hostnam
         requesting_client -> is_logged_in = true;
     }
 
-    temp = clients;
+    temp = clientList;
     while (temp != NULL) {
         if (temp -> is_logged_in) {
             char clientString[dataSizeMax * 4];
@@ -698,8 +625,8 @@ void clientRefreshClientList(char clientListString[]) {
         rcvi++;
     }
     bool is_refresh = false;
-    clients = malloc(sizeof(struct host));
-    struct host * head = clients;
+    clientList = malloc(sizeof(struct host));
+    struct host * head = clientList;
     const char delimmiter[2] = "\n";
     char * token = strtok(clientListString, delimmiter);
     if (strstr(token, "NOTFIRST")) {
@@ -719,10 +646,10 @@ void clientRefreshClientList(char clientListString[]) {
             memcpy(new_client -> ip, client_ip, sizeof(new_client -> ip));
             memcpy(new_client -> hostname, client_hostname, sizeof(new_client -> hostname));
             new_client -> is_logged_in = true;
-            clients -> next_host = new_client;
-            clients = clients -> next_host;
+            clientList -> next_host = new_client;
+            clientList = clientList -> next_host;
         }
-        clients = head -> next_host;
+        clientList = head -> next_host;
     }
     if (is_refresh) {
         cse4589_print_and_log("[REFRESH:SUCCESS]\n");
@@ -735,7 +662,7 @@ void clientRefreshClientList(char clientListString[]) {
 /** SERVER HANDLE REFRESH REQUEST FROM CLIENTS **/
 void serverHandleRefresh(int requesting_client_fd) {
     char clientListString[dataSizeMaxBg] = "REFRESHRESPONSE NOTFIRST\n";
-    struct host * temp = clients;
+    struct host * temp = clientList;
     while (temp != NULL) {
         if (temp -> is_logged_in) {
             char clientString[dataSizeMax * 4];
@@ -758,9 +685,9 @@ void exitClient() {
 
 /** SERVER HANDLE EXIT REQUEST FROM CLIENT **/
 void exitServer(int requesting_client_fd) {
-    struct host * temp = clients;
+    struct host * temp = clientList;
     if (temp -> fd == requesting_client_fd) {
-        clients = clients -> next_host;
+        clientList = clientList -> next_host;
     } else {
         struct host * previous = temp;
         while (temp != NULL) {

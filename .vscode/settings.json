@@ -30,6 +30,8 @@
         "string.h": "c",
         "universalmethods.h": "c",
         "__locale": "c",
-        "cstring": "c"
+        "cstring": "c",
+        "memory": "c",
+        "type_traits": "c"
     }
 }
