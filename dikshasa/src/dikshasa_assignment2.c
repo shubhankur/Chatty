@@ -35,6 +35,7 @@ struct message {
     struct host * from_client;
     struct message * next_message;
 };
+extern struct host * myhost;
 //to handle hosts
 struct host * new_client = NULL; //handle new clients
 struct host * clientList = NULL; //contains clients 
@@ -43,26 +44,26 @@ int yes = 1; // used to set socket option
 
 // APPLICATION STARTUP
 void inialize(bool is_server, char * port);
-void initializeServer(struct host * myhost);
-void initializeClient(struct host * myhost);
-int registerClientLIstener(struct host * myhost);
+void initializeServer();
+void initializeClient();
+int registerClientLIstener();
 
 // COMMAND EXECUTION
-void exCommand(char command[], int requesting_client_fd, struct host * myhost);
-void exCommandHost(char command[], int requesting_client_fd, struct host * myhost);
-void exCommandServer(char command[], int requesting_client_fd, struct host * myhost);
-void exCommandClient(char command[], struct host * myhost);
+void exCommand(char command[], int requesting_client_fd);
+void exCommandHost(char command[], int requesting_client_fd);
+void exCommandServer(char command[], int requesting_client_fd);
+void exCommandClient(char command[]);
 
 // _LIST
 void printLoggedInClients();
 
 // LOGIN
-int connectClientServer(char server_ip[], char server_port[], struct host * myhost);
-void loginClient(char server_ip[], char server_port[], struct host * myhost);
+int connectClientServer(char server_ip[], char server_port[]);
+void loginClient(char server_ip[], char server_port[]);
 void loginHandleServer(char client_ip[], char client_port[], char client_hostname[], int requesting_client_fd);
 
 // REFRESH
-void clientRefreshClientList(char clientListString[], struct host * myhost);
+void clientRefreshClientList(char clientListString[]);
 void serverHandleRefresh(int requesting_client_fd);
 
 // EXIT
@@ -70,7 +71,8 @@ void exitServer(int requesting_client_fd);
 void exitClient();
 
 /***  SERVER INITIALISATION ***/
-void initializeServer(struct host * myhost) {
+void initializeServer() {
+    //myhost = h;
     int listener = 0, status;
     struct addrinfo hints, * localhost_ai, * temp_ai;
 
@@ -183,7 +185,7 @@ void initializeServer(struct host * myhost) {
                     memset(command, '\0', dataSizeMaxBg);
                     if (fgets(command, dataSizeMaxBg - 1, stdin) == NULL) { // -1 because of new line
                     } else {
-                        exCommand(command, fd, myhost);
+                        exCommand(command, fd);
                     }
                     fflush(stdout);
                 } else {
@@ -196,7 +198,7 @@ void initializeServer(struct host * myhost) {
                         close(fd); // Close the connection
                         FD_CLR(fd, & master); // Remove the fd from master set
                     } else {
-                        exCommand(data_buffer, fd, myhost);
+                        exCommand(data_buffer, fd);
                     }
                     fflush(stdout);
                 }
@@ -206,20 +208,21 @@ void initializeServer(struct host * myhost) {
     return;
 }
 
-void initializeClient(struct host * myhost) {
-    registerClientLIstener(myhost);
+void initializeClient() {
+    //myhost = h;
+    registerClientLIstener();
     while (true) {
         // handle data from standard input
         char * command = (char * ) malloc(sizeof(char) * dataSizeMaxBg);
         memset(command, '\0', dataSizeMaxBg);
         if (fgets(command, dataSizeMaxBg, stdin) != NULL) {
-            exCommand(command, STDIN, myhost);
+            exCommand(command, STDIN);
         }
     }
 }
 
 /***  CLIENT LISTENER INITIALISATION ***/
-int registerClientLIstener(struct host * myhost) {
+int registerClientLIstener() {
     int listener = 0, status;
     struct addrinfo hints, * localhost_ai, * temp_ai;
 
@@ -263,20 +266,20 @@ int registerClientLIstener(struct host * myhost) {
 }
 
 /***  EXECUTE COMMANDS ***/
-void exCommand(char command[], int requesting_client_fd, struct host * myhost) {
-    exCommandHost(command, requesting_client_fd, myhost);
+void exCommand(char command[], int requesting_client_fd) {
+    exCommandHost(command, requesting_client_fd);
     if (myhost -> is_server) {
-        exCommandServer(command, requesting_client_fd, myhost);
+        exCommandServer(command, requesting_client_fd);
     } else {
-        exCommandClient(command, myhost);
+        exCommandClient(command);
     }
     fflush(stdout);
 }
 
 /***  EXECUTE HOST COMMANDS (COMMAND SHELL COMMANDS) ***/
-void exCommandHost(char command[], int requesting_client_fd, struct host * myhost) {
+void exCommandHost(char command[], int requesting_client_fd) {
     if (strstr(command, "AUTHOR") != NULL) {
-        printAuthor("skumar45");
+        printAuthor("dikshasa");
     } else if (strstr(command, "IP") != NULL) {
         displayIp(myhost->ip);
     } else if (strstr(command, "PORT") != NULL) {
@@ -286,7 +289,7 @@ void exCommandHost(char command[], int requesting_client_fd, struct host * myhos
 }
 
 /***  EXECUTE SERVER COMMANDS ***/
-void exCommandServer(char command[], int requesting_client_fd, struct host * myhost) {
+void exCommandServer(char command[], int requesting_client_fd) {
     if (strstr(command, "LIST") != NULL) {
         printLoggedInClients();
     } else if (strstr(command, "LOGIN") != NULL) {
@@ -302,7 +305,7 @@ void exCommandServer(char command[], int requesting_client_fd, struct host * myh
 }
 
 /***  EXECUTE CLIENT COMMANDS ***/
-void exCommandClient(char command[], struct host * myhost) {
+void exCommandClient(char command[]) {
     if (strstr(command, "LIST") != NULL) {
         if (myhost -> is_logged_in) {
             printLoggedInClients();
@@ -335,9 +338,9 @@ void exCommandClient(char command[], struct host * myhost) {
             pi += 1;
         }
         server_port[pi - 1] = '\0'; // REMOVE THE NEW LINE
-        loginClient(server_ip, server_port, myhost);
+        loginClient(server_ip, server_port);
     } else if (strstr(command, "REFRESHRESPONSE") != NULL) {
-        clientRefreshClientList(command, myhost);
+        clientRefreshClientList(command);
     } else if (strstr(command, "REFRESH") != NULL) {
         if (myhost -> is_logged_in) {
             sendCommand(server -> fd, "REFRESH\n");
@@ -370,7 +373,7 @@ void printLoggedInClients() {
 }
 
 /***  CONNECT TO SERVER FROM CLIENT SIDE ***/
-int connectClientServer(char server_ip[], char server_port[], struct host * myhost) {
+int connectClientServer(char server_ip[], char server_port[]) {
     server = malloc(sizeof(struct host));
     memcpy(server -> ip, server_ip, sizeof(server -> ip));
     memcpy(server -> port, server_port, sizeof(server -> port));
@@ -449,7 +452,7 @@ int connectClientServer(char server_ip[], char server_port[], struct host * myho
 }
 
 /** LOGIN CLIENT TO SERVER **/
-void loginClient(char server_ip[], char server_port[], struct host * myhost) {
+void loginClient(char server_ip[], char server_port[]) {
 
     // Register the server if it's their first time. Client, will store,
     // server information
@@ -461,7 +464,7 @@ void loginClient(char server_ip[], char server_port[], struct host * myhost) {
     if (server == NULL) {
         struct sockaddr_in sa;
         bool ipValid = inet_pton(AF_INET, server_ip, & (sa.sin_addr))==0;
-        if (!ipValid || connectClientServer(server_ip, server_port, myhost) == 0) {
+        if (!ipValid || connectClientServer(server_ip, server_port) == 0) {
             cse4589_print_and_log("[LOGIN:ERROR]\n");
             cse4589_print_and_log("[LOGIN:END]\n");
             return;
@@ -523,14 +526,14 @@ void loginClient(char server_ip[], char server_port[], struct host * myhost) {
                         close(fd); // Close the connection
                         FD_CLR(fd, & master); // Remove the fd from master set
                     } else {
-                        exCommand(data_buffer, fd, myhost);
+                        exCommand(data_buffer, fd);
                     }
                 } else if (fd == STDIN) {
                     // handle data from standard input
                     char * command = (char * ) malloc(sizeof(char) * dataSizeMaxBg);
                     memset(command, '\0', dataSizeMaxBg);
                     if (fgets(command, dataSizeMaxBg - 1, stdin) != NULL) {
-                        exCommand(command, STDIN, myhost);
+                        exCommand(command, STDIN);
                     }
                 } else if (fd == myhost -> fd) {
 
@@ -601,7 +604,7 @@ void loginHandleServer(char client_ip[], char client_port[], char client_hostnam
 }
 
 /** REFRESH LIST OF CLIENTS **/
-void clientRefreshClientList(char clientListString[], struct host * myhost) {
+void clientRefreshClientList(char clientListString[]) {
     char * received = strstr(clientListString, "RECEIVE");
     int rcvi = received - clientListString, cmdi = 0;
     char command[dataSizeMax];
@@ -615,7 +618,7 @@ void clientRefreshClientList(char clientListString[], struct host * myhost) {
         if (blank_count == 4) {
             command[cmdi - 3] = '\0';
             strcat(command, "\n");
-            exCommandClient(command, myhost);
+            exCommandClient(command);
             cmdi = -1;
         }
         cmdi++;
@@ -652,7 +655,7 @@ void clientRefreshClientList(char clientListString[], struct host * myhost) {
         cse4589_print_and_log("[REFRESH:SUCCESS]\n");
         cse4589_print_and_log("[REFRESH:END]\n");
     } else {
-        exCommandClient("SUCCESSLOGIN", myhost);
+        exCommandClient("SUCCESSLOGIN");
     }
 }
 

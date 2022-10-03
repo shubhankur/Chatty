@@ -24,10 +24,10 @@ void setHostNameAndIp(struct host * h) {
     server_addr.sin_addr.s_addr = inet_addr("8.8.8.8");
     server_addr.sin_port = htons(53);
 
-    // Connect to server
+    // establish connection with the server
     connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
 
-    // Get my ip address and port
+    // fetch my ip and port
     bzero(&my_addr, sizeof(my_addr));
     socklen_t len = sizeof(my_addr);
     getsockname(sockfd, (struct sockaddr *)&my_addr, &len);
