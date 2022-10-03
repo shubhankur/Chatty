@@ -2,9 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../src/startup.c"
+#include "../include/universalMethods.h"
+
+void host__print_list_of_clients() {
+    cse4589_print_and_log("[LIST:SUCCESS]\n");
+
+    struct host * temp = clients;
+    int id = 1;
+    while (temp != NULL) {
+        // SUSPICIOUS FOR REFRESH
+        if (temp -> is_logged_in) {
+            cse4589_print_and_log("%-5d%-35s%-20s%-8s\n", id, temp -> hostname, temp -> ip_addr, (temp -> port_num));
+            id = id + 1;
+        }
+        temp = temp -> next_host;
+    }
+
+    cse4589_print_and_log("[LIST:END]\n");
+}
 
 void execute_command(struct host *localhost, char command[], int requesting_client_fd) {
-    host__execute_command(command, requesting_client_fd);
+    host__execute_command(localhost, command, requesting_client_fd);
     if (localhost -> hostType == 0) {
         server__execute_command(command, requesting_client_fd);
     } else {
@@ -14,13 +32,13 @@ void execute_command(struct host *localhost, char command[], int requesting_clie
 }
 
 /***  EXECUTE HOST COMMANDS (COMMAND SHELL COMMANDS) ***/
-void host__execute_command(char command[], int requesting_client_fd) {
+void host__execute_command(struct host *localhost, char command[], int requesting_client_fd) {
     if (strstr(command, "AUTHOR") != NULL) {
-        host__print_author();
+       printAuthor("dikshasa");
     } else if (strstr(command, "IP") != NULL) {
-        host__print_ip_address();
+        displayIp(localhost-> ip_addr);
     } else if (strstr(command, "PORT") != NULL) {
-        host__print_port();
+        host__print_port(localhost -> port_num);
     }
     fflush(stdout);
 }
@@ -76,14 +94,7 @@ void client__execute_command(char command[], struct host *localhost) {
         }
         server_port[pi - 1] = '\0'; // REMOVE THE NEW LINE
         client__login(server_ip, server_port);
-    }else if (strstr(command, "REFRESH") != NULL) {
-        if (localhost -> is_logged_in) {
-            host__send_command(server -> fd, "REFRESH\n");
-        } else {
-            cse4589_print_and_log("[REFRESH:ERROR]\n");
-            cse4589_print_and_log("[REFRESH:END]\n");
-        }
-    } else if (strstr(command, "EXIT") != NULL) {
+    }else if (strstr(command, "EXIT") != NULL) {
         client_exit();
     }
     fflush(stdout);

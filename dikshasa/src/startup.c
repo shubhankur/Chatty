@@ -26,6 +26,8 @@ int yes = 1;
 
 struct host *myHost = NULL;
 struct host * new_client = NULL;
+struct host * clients = NULL;
+
 
 
 void host__init(char *hostType, char *port)
