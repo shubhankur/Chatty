@@ -1,10 +1,12 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/startup.c"
+#include "../include/host.h"
 #include "../include/universalMethods.h"
+#include "../include/executecommand.h"
 
-void host__print_list_of_clients() {
+
+void host__print_list_of_clients(struct host* clients) {
     cse4589_print_and_log("[LIST:SUCCESS]\n");
 
     struct host * temp = clients;
@@ -21,12 +23,12 @@ void host__print_list_of_clients() {
     cse4589_print_and_log("[LIST:END]\n");
 }
 
-void execute_command(struct host *localhost, char command[], int requesting_client_fd) {
+void execute_command(struct host *localhost, char command[], int requesting_client_fd, struct host* clients) {
     host__execute_command(localhost, command, requesting_client_fd);
     if (localhost -> hostType == 0) {
-        server__execute_command(command, requesting_client_fd);
+        server__execute_command(command, requesting_client_fd, clients);
     } else {
-        client__execute_command(command, localhost);
+        client__execute_command(command, localhost, clients);
     }
     fflush(stdout);
 }
@@ -44,9 +46,9 @@ void host__execute_command(struct host *localhost, char command[], int requestin
 }
 
 /***  EXECUTE SERVER COMMANDS ***/
-void server__execute_command(char command[], int requesting_client_fd) {
+void server__execute_command(char command[], int requesting_client_fd, struct host* clients) {
     if (strstr(command, "LIST") != NULL) {
-        host__print_list_of_clients();
+        host__print_list_of_clients(clients);
     } else if (strstr(command, "LOGIN") != NULL) {
         char client_hostname[250], client_port[250], client_ip[250];
         sscanf(command, "LOGIN %s %s %s", client_ip, client_port, client_hostname);
@@ -60,10 +62,10 @@ void server__execute_command(char command[], int requesting_client_fd) {
 }
 
 /***  EXECUTE CLIENT COMMANDS ***/
-void client__execute_command(char command[], struct host *localhost) {
+void client__execute_command(char command[], struct host *localhost, struct host* clients) {
     if (strstr(command, "LIST") != NULL) {
         if (localhost -> is_logged_in) {
-            host__print_list_of_clients();
+            host__print_list_of_clients(clients);
         } else {
             cse4589_print_and_log("[LIST:ERROR]\n");
             cse4589_print_and_log("[LIST:END]\n");

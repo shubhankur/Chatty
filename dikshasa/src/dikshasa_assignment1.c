@@ -22,7 +22,6 @@
  */
 
 #include <stdio.h>
-#include "../include/universalMethods.h"
 #include "../include/global.h"
 #include "../include/logger.h"
 #include "../include/startup.h"

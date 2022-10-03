@@ -23,6 +23,11 @@
         "string_view": "c",
         "vector": "c",
         "executecommand.h": "c",
-        "client.h": "c"
+        "client.h": "c",
+        "host.h": "c",
+        "startup.h": "c",
+        "server.h": "c",
+        "string.h": "c",
+        "universalmethods.h": "c"
     }
 }

@@ -1,1 +1,1 @@
-void server__init(struct host *myhost);
+void server__init(struct host *myhost, struct host *new_client, struct host* clients);

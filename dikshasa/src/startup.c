@@ -3,7 +3,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
+#include "../include/startup.h"
 #include "../include/client.h"
+#include "../include/server.h"
 #include "../include/host.h"
 
 int yes = 1;
@@ -11,8 +13,6 @@ int yes = 1;
 struct host *myHost = NULL;
 struct host * new_client = NULL;
 struct host * clients = NULL;
-
-
 
 void host__init(char *hostType, char *port)
 {
@@ -22,12 +22,12 @@ void host__init(char *hostType, char *port)
     if (strcomp(hostType,'s'))
     {
         myHost->hostType = 0;
-        server__init(myHost);
+        server__init(myHost, new_client, clients);
     }
     else
     {
         myHost->hostType = 1;
-        client__init(myHost);
+        client__init(myHost, clients);
     }
 }
 

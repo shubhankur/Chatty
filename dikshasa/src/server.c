@@ -1,13 +1,16 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/startup.c"
+#include "../include/server.h"
+#include "../include/host.h"
 #include "../include/executecommand.h"
 #include <sys/select.h>
 
 #define STDIN 0
 
-void server__init(struct host *myhost) {
+int yes = 1;
+
+void server__init(struct host *myhost, struct host *new_client, struct host* clients) {
     int sock = 0; // to get the socket result
     int error; // to check if connection is successful
     struct addrinfo hints, * localhost_ai, * temp_ai;
@@ -125,7 +128,7 @@ void server__init(struct host *myhost) {
                     memset(command, '\0', 500 * 200);
                     if (fgets(command, 500 * 200 - 1, stdin) == NULL) { // -1 because of new line
                     } else {
-                        execute_command(myhost, command, fd);
+                        execute_command(myhost, command, fd, clients);
                     }
                     fflush(stdout);
                 } else {
@@ -138,7 +141,7 @@ void server__init(struct host *myhost) {
                         close(fd); // Close the connection
                         FD_CLR(fd, & master); // Remove the fd from master set
                     } else {
-                        execute_command(myhost, data_buffer, fd);
+                        execute_command(myhost, data_buffer, fd, clients);
                     }
                     fflush(stdout);
                 }

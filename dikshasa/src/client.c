@@ -51,14 +51,14 @@ int client__register_listener(struct host *myhost) {
     freeaddrinfo(localhost_ai);
 }
 
-void client__init(struct host *myhost) {
+void client__init(struct host *myhost, struct host* clients) {
     client__register_listener(myhost);
     while (1) {
         // handle data from standard input
         char * command = (char * ) malloc(sizeof(char) * 500*500);
         memset(command, '\0', 500*500);
         if (fgets(command, 500*500, stdin) != NULL) {
-            execute_command(myhost, command, STDIN);
+            execute_command(myhost, command, STDIN, clients);
         }
     }
 }
