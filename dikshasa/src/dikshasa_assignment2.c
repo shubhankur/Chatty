@@ -35,7 +35,7 @@ struct message {
     struct host * from_client;
     struct message * next_message;
 };
-struct host * myhost = NULL;
+extern struct host * myhost;
 //to handle hosts
 struct host * new_client = NULL; //handle new clients
 struct host * clientList = NULL; //contains clients 
@@ -44,8 +44,8 @@ int yes = 1; // used to set socket option
 
 // APPLICATION STARTUP
 void inialize(bool is_server, char * port);
-void initializeServer(struct host * h);
-void initializeClient(struct host * h);
+void initializeServer();
+void initializeClient();
 int registerClientLIstener();
 
 // COMMAND EXECUTION
@@ -71,8 +71,8 @@ void exitServer(int requesting_client_fd);
 void exitClient();
 
 /***  SERVER INITIALISATION ***/
-void initializeServer(struct host * h) {
-    myhost = h;
+void initializeServer() {
+    //myhost = h;
     int listener = 0, status;
     struct addrinfo hints, * localhost_ai, * temp_ai;
 
@@ -208,8 +208,8 @@ void initializeServer(struct host * h) {
     return;
 }
 
-void initializeClient(struct host * h) {
-    myhost = h;
+void initializeClient() {
+    //myhost = h;
     registerClientLIstener();
     while (true) {
         // handle data from standard input
