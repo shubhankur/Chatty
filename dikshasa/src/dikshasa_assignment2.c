@@ -78,15 +78,6 @@ void host__execute_command(char command[], int requesting_client_fd);
 void server__execute_command(char command[], int requesting_client_fd);
 void client__execute_command(char command[]);
 
-// AUTHOR
-void host__print_author();
-
-// IP
-void host__print_ip_address();
-
-// PORT
-void host__print_port();
-
 // _LIST
 void host__print_list_of_clients();
 
@@ -386,54 +377,12 @@ void host__execute_command(char command[], int requesting_client_fd) {
 void server__execute_command(char command[], int requesting_client_fd) {
     if (strstr(command, "LIST") != NULL) {
         host__print_list_of_clients();
-    } else if (strstr(command, "STATISTICS") != NULL) {
-        server__print_statistics();
-    } else if (strstr(command, "BLOCKED") != NULL) {
-        char client_ip[MAXDATASIZE];
-        sscanf(command, "BLOCKED %s", client_ip);
-        server__print_blocked(client_ip);
     } else if (strstr(command, "LOGIN") != NULL) {
         char client_hostname[MAXDATASIZE], client_port[MAXDATASIZE], client_ip[MAXDATASIZE];
         sscanf(command, "LOGIN %s %s %s", client_ip, client_port, client_hostname);
         server__handle_login(client_ip, client_port, client_hostname, requesting_client_fd);
-    } else if (strstr(command, "BROADCAST") != NULL) {
-        char message[MAXDATASIZEBACKGROUND];
-        int cmdi = 10;
-        int msgi = 0;
-        while (command[cmdi] != '\0') {
-            message[msgi] = command[cmdi];
-            cmdi += 1;
-            msgi += 1;
-        }
-        message[msgi - 1] = '\0';
-        server__handle_broadcast(message, requesting_client_fd);
     } else if (strstr(command, "REFRESH") != NULL) {
         server__handle_refresh(requesting_client_fd);
-    } else if (strstr(command, "SEND") != NULL) {
-        char client_ip[MAXDATASIZE], message[MAXDATASIZE];
-        int cmdi = 5;
-        int ipi = 0;
-        while (command[cmdi] != ' ') {
-            client_ip[ipi] = command[cmdi];
-            cmdi += 1;
-            ipi += 1;
-        }
-        client_ip[ipi] = '\0';
-        cmdi++;
-        int msgi = 0;
-        while (command[cmdi] != '\0') {
-            message[msgi] = command[cmdi];
-            cmdi += 1;
-            msgi += 1;
-        }
-        message[msgi - 1] = '\0'; // Remove new line
-        server__handle_send(client_ip, message, requesting_client_fd);
-    } else if (strstr(command, "UNBLOCK") != NULL) {
-        server__block_or_unblock(command, false, requesting_client_fd);
-    } else if (strstr(command, "BLOCK") != NULL) {
-        server__block_or_unblock(command, true, requesting_client_fd);
-    } else if (strstr(command, "LOGOUT") != NULL) {
-        server__handle_logout(requesting_client_fd);
     } else if (strstr(command, "EXIT") != NULL) {
         server__handle_exit(requesting_client_fd);
     }

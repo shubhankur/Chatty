@@ -1,1 +1,0 @@
-void host__init(char* hostType, char * port);

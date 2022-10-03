@@ -1,1 +1,0 @@
-void client__init(struct host *myhost, struct host* clients);
