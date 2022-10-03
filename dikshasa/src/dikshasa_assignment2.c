@@ -621,9 +621,6 @@ void client__login(char server_ip[], char server_port[]) {
                 } else if (fd == localhost -> fd) {
 
                     int new_peer_fd = accept(fd, (struct sockaddr * ) & new_peer_addr, & addrlen);
-                    if (new_peer_fd != -1) {
-                        client__receive_file_from_peer(new_peer_fd);
-                    }
                 }
             }
         }
