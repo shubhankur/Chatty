@@ -40,8 +40,8 @@ int main(int argc, char ** argv) {
     fclose(fopen(LOGFILE, "w"));
 
     /*Start Here*/
-    // initialise the host
+    //start the application
     //host__init(argv[1], argv[2]);
-    host__init(strcmp(argv[1], "s") == 0, argv[2]);
+    inialize(strcmp(argv[1], "s") == 0, argv[2]);
     return 0;
 }
