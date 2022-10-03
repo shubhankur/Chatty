@@ -3,8 +3,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "../include/server.h"
-//#include "../include/client.h"
+#include "../include/client.h"
 #include "../include/host.h"
 
 int yes = 1;
@@ -25,11 +24,11 @@ void host__init(char *hostType, char *port)
         myHost->hostType = 0;
         server__init(myHost);
     }
-    // else
-    // {
-    //     myHost->hostType = 1;
-    //     client__init(myHost);
-    // }
+    else
+    {
+        myHost->hostType = 1;
+        client__init(myHost);
+    }
 }
 
 void host__set_hostname_and_ip(struct host *h)

@@ -1,12 +1,12 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/startup.c"
 #include "../include/executecommand.h"
-//#include "../include/client.h"
-
+#include "../include/client.h"
+#include "../include/host.h"
 
 #define STDIN 0
+int yes = 1;
 
 int client__register_listener(struct host *myhost) {
     int listener = 0, status;
