@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/server.h"
 #include "../include/host.h"
 #include "../include/executecommand.h"
 #include <sys/select.h>
