@@ -4,6 +4,7 @@
 #include "../include/host.h"
 #include "../include/universalMethods.h"
 #include "../include/executecommand.h"
+struct host host;
 
 
 void host__print_list_of_clients(struct host* clients) {

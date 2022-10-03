@@ -1,6 +1,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/server.h"
 #include "../include/host.h"
 #include "../include/executecommand.h"
@@ -9,7 +10,7 @@
 #define STDIN 0
 
 int yes = 1;
-
+struct host host;
 void server__init(struct host *myhost, struct host *new_client, struct host* clients) {
     int sock = 0; // to get the socket result
     int error; // to check if connection is successful

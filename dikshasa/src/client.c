@@ -4,9 +4,11 @@
 #include "../include/executecommand.h"
 #include "../include/client.h"
 #include "../include/host.h"
+#include <string.h>
 
 #define STDIN 0
 int yes = 1;
+struct host host;
 
 int client__register_listener(struct host *myhost) {
     int listener = 0, status;
