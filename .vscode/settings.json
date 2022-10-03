@@ -28,6 +28,8 @@
         "startup.h": "c",
         "server.h": "c",
         "string.h": "c",
-        "universalmethods.h": "c"
+        "universalmethods.h": "c",
+        "__locale": "c",
+        "cstring": "c"
     }
 }

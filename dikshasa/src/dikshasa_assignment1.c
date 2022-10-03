@@ -25,6 +25,7 @@
 #include "../include/global.h"
 #include "../include/logger.h"
 #include "../include/startup.h"
+#include <string.h>
 /**
  * main function
  *
