@@ -35,6 +35,7 @@
         "type_traits": "c",
         "cstdlib": "c",
         "ostream": "c",
-        "new": "c"
+        "new": "c",
+        "stdio.h": "c"
     }
 }

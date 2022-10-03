@@ -102,10 +102,7 @@ bool isIpValid(char ip[dataSizeMax]) {
     return result != 0;
 }
 
-/***  GET HOSTNAME AND IP4 ADDRESS OF LOCAL SYSTEM 
-      NOTE: The following function has been inspired from
-      https://www.geeksforgeeks.org/c-program-display-hostname-ip-address/
-***/
+/***  Reference : https://gist.github.com/listnukira/4045436 ***/
 void setHostNameAndIp(struct host * h) {
     char myIP[16];
     unsigned int myPort;
@@ -354,7 +351,7 @@ void exCommand(char command[], int requesting_client_fd) {
 /***  EXECUTE HOST COMMANDS (COMMAND SHELL COMMANDS) ***/
 void exCommandHost(char command[], int requesting_client_fd) {
     if (strstr(command, "AUTHOR") != NULL) {
-        printAuthor("skumar45");
+        printAuthor("dikshasa");
     } else if (strstr(command, "IP") != NULL) {
         displayIp(localhost->ip);
     } else if (strstr(command, "PORT") != NULL) {
