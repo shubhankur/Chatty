@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 struct host * myhost = NULL;
 

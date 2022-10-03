@@ -32,6 +32,9 @@
         "__locale": "c",
         "cstring": "c",
         "memory": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "cstdlib": "c",
+        "ostream": "c",
+        "new": "c"
     }
 }

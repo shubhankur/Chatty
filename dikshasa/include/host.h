@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 struct host {
     char hostname[500];
     char ip[500];
