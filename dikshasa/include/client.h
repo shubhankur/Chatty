@@ -1,1 +1,1 @@
-void client__init(struct host *localhost);
+void client__init(struct host *myhost);

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "../src/startup.c"
 #include "../include/executecommand.h"
+#include "../include/client.h"
 
 
 #define STDIN 0
