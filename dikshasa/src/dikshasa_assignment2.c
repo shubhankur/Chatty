@@ -110,7 +110,6 @@ void setHostNameAndIp(struct host * h) {
     int sockfd;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     struct hostent *he;
-
     // Set server_addr of Google DNS
     bzero(&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
